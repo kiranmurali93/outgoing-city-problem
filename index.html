@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body onload="getCurrentAddedList()">
+   <form onsubmit="handleSubmit(event)">
+    <h1>Enter the source</h1>
+    <input name="source" type="text"/>
+    <h1>Enter the destination</h1>
+    <input name="destination" type="text"/>
+    <input type="submit" value="Submit">
+   </form>
+
+
+   <h1>List of source and destinations</h1>
+   <div id="containerDiv">
+   </div>
+
+   <button onclick="handleClickDeadEnd()">Show Dead end city</button>
+   <div id="listOfDeadEnds"></div>
+</body>
+</html>
+
+<script>
+const currentDiv = document.getElementById("containerDiv");
+async function getCurrentAddedList() {
+    const res = await fetch('http://localhost:3000/listAll', 
+            {method: "GET",  headers: {
+            "Content-Type": "application/json",
+            },},)
+
+    const addedList = await res.json()
+
+    console.log(addedList);
+
+    addedList.forEach((x) => {
+        const source = document.createElement('div')
+            const newContent = document.createTextNode(`${x['source']} -> ${x['destination']}`)
+            source.append(newContent)
+            document.body.insertBefore(source, currentDiv);
+           
+    })
+}
+
+    async function handleSubmit(event) {
+        event.preventDefault()
+        const formData = new FormData(event.target)
+        const x = []
+
+            formData.forEach((value, key) => {
+                x.push(value);
+            });
+
+            const payload = {source: x[0], destination: x[1]}
+
+            const res = await fetch('http://localhost:3000/cityPath', 
+            {method: "POST", body: JSON.stringify(payload),  headers: {
+            "Content-Type": "application/json",
+            },},)
+
+    }
+
+    async function handleClickDeadEnd() {
+    const res = await fetch('http://localhost:3000/deadEndCity', 
+            {method: "GET",  headers: {
+            "Content-Type": "application/json",
+            },},)
+
+    const deadEndDiv = document.getElementById("listOfDeadEnds");
+    if(res.status !== 200){
+        const deadEnds = document.createElement('div')
+        const newContent = document.createTextNode(`something went wrong`)
+        deadEnds.append(newContent)
+            document.body.insertBefore(deadEnds, deadEndDiv);
+    }
+
+    const deadEndPlaces = await res.json()
+    
+    if(!deadEndPlaces.length){
+        const deadEnds = document.createElement('div')
+        const newContent = document.createTextNode(`Enter some data`)
+        deadEnds.append(newContent)
+            document.body.insertBefore(deadEnds, deadEndDiv);
+    }
+
+
+    const deadEnds = document.createElement('div')
+        const newContent = document.createTextNode(JSON.stringify(deadEndPlaces?.map((item) => item.name)))
+        deadEnds.append(newContent)
+            document.body.insertBefore(deadEnds, deadEndDiv);
+
+}
+
+</script>
